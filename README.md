@@ -203,7 +203,7 @@ to authenticate against LDAP (eg. `mozart` and `password`). You should get an
 correctly.
 
 ```
-curl -H "Authorization: Basic $(echo "USERNAME:PASSWORD" | base64)" -vk "https://127.0.0.1:5001/auth?service=Docker%20registry&scope=registry:catalog:*"
+curl --user "USERNAME:PASSWORD" -vk "https://127.0.0.1:5001/auth?service=Docker%20registry&scope=registry:catalog:*"
 ```
 
 # Manual token-based workflow to list repositories
@@ -230,6 +230,8 @@ authURL="$realm?service=$service&scope=$scope"
 
 # Query the auth server to get a token
 token=$(curl -ks -H "Authorization: Basic $(echo -n "mozart:password" | base64)" "$authURL")
+   OR
+token=$(curl -ks --user "mozart:password" "$authURL")
 
 # Get the bare token from the JSON string: {"token": "...."}
 token=$(echo $token | jq .token | tr -d '"')
