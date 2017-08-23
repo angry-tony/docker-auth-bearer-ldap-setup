@@ -13,15 +13,26 @@ auth:
   entrypoint: /start.sh
   ports:
     - "5001:5001"
-  links:
-    - ldap:ldap
+#  links:
+#    - ldap:ldap
   volumes:
     - "./auth/start.sh:/start.sh:ro"
-    - "./auth/config:/config:ro" 
+    - "./auth/config:/config:ro"
     - "./auth/logs:/logs:rw"
     - "./certs:/certs:ro"
 
-ldap:
-  build: ./ldap
-  expose:
-    - "389"
+#ldap:
+#  build: ./ldap
+#  expose:
+#    - "389"
+
+#nginx:
+#  image: benhall/nginx-registry-proxy:1.9.6
+#  environment:
+#    - VIRTUAL_HOST=pdr-01
+#  ports:
+#    - "80:80"
+#    - "443:443"
+#  volumes:
+#    - "/var/run/docker.sock:/tmp/docker.sock:ro"
+#    - "./certs:/etc/nginx/certs:ro"

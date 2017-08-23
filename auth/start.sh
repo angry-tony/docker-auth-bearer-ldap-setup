@@ -2,7 +2,7 @@
 #20161125
 # Copy over certificates to correct place and update certificate storage
 #find "/config/ldap_certificates" -type f -exec cp -fv {} /usr/local/share/ca-certificates/ \;
-find "/config/ldap_certificates" -type f -exec cp -fv {} /etc/ssl/certs/ \;
+#find "/config/ldap_certificates" -type f -exec cp -fv {} /etc/ssl/certs/ \;
 #update-ca-certificates
 
 # Replace newline and carriage returns in password file

@@ -1,0 +1,36 @@
+yum -y install httpd-tools ca-certificates jq coreutils
+
+config.yaml 파일들 수정
+
+   cd certs
+   echo 'subjectAltName=DNS:*.example.com,DNS:auth-pdr-01,DNS:pdr-01,IP:192.0.220.105' > extfile.cnf
+   openssl x509 -req -sha256 -in pdr-01.csr -CA pdr-01-CA.crt -CAkey pdr-01-CA.key -CAcreateserial -out pdr-01.crt -days 3650  -extfile extfile.cnf
+
+   openssl x509 -in ./pdr-01.crt -text -noout
+
+   for i in 1 2 3 4; do ssh $i "rm -rf /etc/pki/ca-trust/source/anchors/*"; done
+
+   for i in 1 2 3 4; do scp pdr-01:/root/docker-auth-bearer-ldap-setup/certs/pdr-01-CA.crt $i:/etc/pki/ca-trust/source/anchors; done
+
+   for i in 1 2 3 4; do ssh $i "update-ca-trust force-enable && update-ca-trust enable && update-ca-trust extract"; done
+
+   for i in 1 2 3 4; do ssh $i "cat /etc/pki/ca-trust/source/anchors/pdr-01-CA.crt >> /opt/mesosphere/active/python-requests/lib/python3.5/site-packages/requests/cacert.pem"; done
+
+   #docker-compose up -d --force-recreate -f for-ldap-docker-compose.yml
+docker-compose up -d --force-recreate
+
+registryURL=https://pdr-01:5000/v2/_catalog
+respHeader=$(mktemp);
+curl -k --dump-header $respHeader $registryURL
+	# {"errors":[{"code":"UNAUTHORIZED","message":"authentication required","detail":[{"Type":"registry","Name":"catalog","Action":"*"}]}]}
+wwwAuth=$(cat $respHeader | grep "Www-Authenticate")
+realm=$(echo $wwwAuth | grep -o '\(realm\)="[^"]*"' | cut -d '"' -f 2)
+service=$(echo $wwwAuth | grep -o '\(service\)="[^"]*"' | cut -d '"' -f 2)
+scope=$(echo $wwwAuth | grep -o '\(scope\)="[^"]*"' | cut -d '"' -f 2)
+authURL="$realm?service=$service&scope=$scope"
+token=$(curl -ks --user "mozart:password" "$authURL")
+	#token=$(curl -ks -H "Authorization: Basic $(echo -n "mozart:password" | base64)" "$authURL")
+token=$(echo $token | jq .token | tr -d '"')
+
+
+curl -k -H "Authorization: Bearer $token" $registryURL
