@@ -37,28 +37,33 @@ users:
     password: "$2y$05$LO.vzwpWC5LZGqThvEfznu8qhb5SGqvBSWY1J3yZ4AxtMRZ3kN5jC"  # badmin
   "test":
     password: "$2y$05$WuwBasGDAgr.QCbGIjKJaep4dhxeai9gNZdmBnQXqpKly57oNutya"  # 123
-  "hoho":
-    password: "$2y$05$mhEBe9XTzsrFnf4Ir6DTtOD0QwgA/X8Wcwj8B122sHKwQvwmcwnxC" # a
 
 acl:
   # Admin has full access to everything.
   - match: {account: "admin"}
     actions: ["*"]
 
-  # User "user" can pull stuff.
+  # User "test" has full access to test-* images but nothing else.
+  - match: {account: "test", name: "test-*"}
+    actions: ["*"]
   - match: {account: "test"}
-    actions: ["pull"]
+    actions: []
 
-  # User "hoho" can pull stuff.
-  - match: {account: "hoho"}
+#  # This will allow authenticated users to pull/push
+#  - match:
+#      account: /.+/
+#    actions: ['*']
+
+#  # All logged in users can pull all images.
+#  - match: {account: "/.+/"}
+#    actions: ["pull"]
+
+  # All logged in users can push all images that are in a namespace beginning with their name
+  - match: {account: "/.+/", name: "${account}/*"}
     actions: ["*"]
 
-  # This will allow authenticated users to pull/push
-  - match:
-      account: /.+/
-    actions: ['*']
-
-  # The user "serviceaccount" (from LDAP) may not perform any docker actions
-  # like push or pull.
-  - match: {account: "serviceaccount"}
-    actions: []
+  # All logged in users can only push & pull group-* images
+  - match: {account: "/.+/", name: "group-*"}
+    actions: ["push"]
+  - match: {account: "/.+/", name: "group-*"}
+    actions: ["pull"]

@@ -1,5 +1,6 @@
 yum -y install httpd-tools ca-certificates jq coreutils
 
+	# htpasswd -nbB hoho a
 config.yaml 파일들 수정
 
    cd certs
@@ -34,3 +35,40 @@ token=$(echo $token | jq .token | tr -d '"')
 
 
 curl -k -H "Authorization: Bearer $token" $registryURL
+
+## for docker registry in DCOS config.yaml
+cluster_docker_registry_url: https://pdr-01:5000
+cluster_docker_credentials:
+  auths:
+    'https://pdr-01:5000':
+      auth: dGVzdDoxMjM
+      email: angrytony@hohotest.com
+cluster_docker_credentials_dcos_owned: false
+cluster_docker_credentials_enabled: 'true'
+
+
+## user test credencial : User "test" has full access to test-* images but nothing else.
+# tee /etc/mesosphere/docker_credentials << 'EOF'
+{
+        "auths": {
+                "pdr-01:5000": {
+                        "auth": "dGVzdDoxMjM="
+                },
+                "pdr-01:5000": {
+                        "auth": "bW96YXJ0OnBhc3N3b3Jk"
+                }
+        }
+}
+EOF
+
+sudo sh -c 'systemctl kill -s SIGUSR1 dcos-mesos-master && systemctl stop dcos-mesos-master'; \
+rm -f /var/lib/dcos/mesos-resources; \
+systemctl start dcos-mesos-master
+
+sudo sh -c 'systemctl kill -s SIGUSR1 dcos-mesos-slave && systemctl stop dcos-mesos-slave'; \
+rm -rf /var/lib/mesos/slave/meta/slaves/latest/; \
+systemctl restart dcos-mesos-slave
+
+sudo sh -c 'systemctl kill -s SIGUSR1 dcos-mesos-slave-public && systemctl stop dcos-mesos-slave-public'; \
+rm -rf /var/lib/mesos/slave/meta/slaves/latest/; \
+systemctl restart dcos-mesos-slave-public
