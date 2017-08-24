@@ -1,0 +1,17 @@
+	#sysdig -A -p "*%evt.time %proc.cmdline" evt.type=execve and proc.name=curl
+
+registryURL=https://pdr-01:5000/v2/_catalog
+respHeader=$(mktemp);
+curl -k --dump-header $respHeader $registryURL > /dev/null 2>&1
+	# {"errors":[{"code":"UNAUTHORIZED","message":"authentication required","detail":[{"Type":"registry","Name":"catalog","Action":"*"}]}]}
+wwwAuth=$(cat $respHeader | grep "Www-Authenticate")
+realm=$(echo $wwwAuth | grep -o '\(realm\)="[^"]*"' | cut -d '"' -f 2)
+service=$(echo $wwwAuth | grep -o '\(service\)="[^"]*"' | cut -d '"' -f 2)
+scope=$(echo $wwwAuth | grep -o '\(scope\)="[^"]*"' | cut -d '"' -f 2)
+authURL="$realm?service=$service&scope=$scope"
+	#token=$(curl -ks --user "admin:password" "$authURL")
+token=$(curl -ks -H "Authorization: Basic $(echo -n "admin:badmin" | base64)" "$authURL")
+token=$(echo $token | jq .token | tr -d '"')
+
+
+curl -H "Authorization: Bearer $token" $registryURL
