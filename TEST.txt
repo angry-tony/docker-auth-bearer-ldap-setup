@@ -1,4 +1,5 @@
-	#sysdig -A -p "*%evt.time %proc.cmdline" evt.type=execve and proc.name=curl
+#curl -s https://s3.amazonaws.com/download.draios.com/stable/install-sysdig | sudo bash
+#sysdig -A -p "*%evt.time %proc.cmdline" evt.type=execve and proc.name=curl
 
 registryURL=https://pdr-01:5000/v2/_catalog
 respHeader=$(mktemp);
