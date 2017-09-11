@@ -30,6 +30,8 @@ slapd slapd/no_configuration boolean false
 slapd slapd/dump_database select when needed
 EOF
 
+  sed -i "s/^exit 101$/exit 0/" /usr/sbin/policy-rc.d
+
   dpkg-reconfigure -f noninteractive slapd
 
   touch /var/lib/ldap/docker_bootstrapped
